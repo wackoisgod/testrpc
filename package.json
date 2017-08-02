@@ -1,6 +1,6 @@
 {
   "name": "ethereumjs-testrpc",
-  "version": "4.0.x-wacko",
+  "version": "4.0.3-wacko",
   "bin": {
     "testrpc": "./build/cli.node.js"
   },
