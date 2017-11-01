@@ -8,6 +8,7 @@ var corepkg = require("./node_modules/ganache-core/package.json");
 var URL = require("url");
 var Web3 = require("web3");
 var web3 = new Web3(); // Used only for its BigNumber library.
+var fs = require("fs");
 
 var parser = yargs()
 .option("unlock", {
@@ -16,6 +17,40 @@ var parser = yargs()
 });
 
 var argv = parser.parse(process.argv);
+
+if (argv.help || argv['?']) {
+  console.log("");
+  console.log("testrpc: Fast Ethereum RPC client for testing and development");
+  console.log("  Full docs: https://github.com/ethereumjs/testrpc");
+  console.log("");
+  console.log("Usage: testrpc [options]");
+  console.log("  options:");
+  console.log("  --port/-p <port to bind to, default 8545>");
+  console.log("  --host/-h <host to bind to, default 0.0.0.0>");
+  console.log("  --fork/-f <url>   (Fork from another currently running Ethereum client at a given block)");
+  console.log("");
+  console.log("  --db <db path>   (directory to save chain db)");
+  console.log("  --seed <seed value for PRNG, default random>");
+  console.log("  --deterministic/-d     (uses fixed seed)");
+  console.log("  --mnemonic/-m <mnemonic>");
+  console.log("  --accounts/-a <number of accounts to generate at startup>");
+  console.log("  --acctKeys <path to file>  (saves generated accounts and private keys as JSON object in specified file)");
+  console.log("  --secure/-s   (Lock accounts by default)");
+  console.log("  --unlock <accounts>   (Comma-separated list of accounts or indices to unlock)");
+  console.log("");
+  console.log("  --blocktime/-b <block time in seconds>");
+  console.log("  --networkId/-i <network id> (default current time)");
+  console.log("  --gasPrice/-g <gas price>   (default 20000000000)");
+  console.log("  --gasLimit/-l <gas limit>   (default 90000)");
+  console.log("");
+  console.log("  --debug       (Output VM opcodes for debugging)");
+  console.log("  --verbose/-v");
+  console.log("  --mem         (Only show memory output, not tx history)");
+  console.log("");
+  console.log("  --help / -?    (this output)");
+  console.log("");
+  process.exit(0);
+}
 
 function parseAccounts(accounts) {
   function splitAccount(account) {
@@ -77,6 +112,7 @@ var options = {
   verbose: argv.v || argv.verbose,
   secure: argv.n || argv.secure || false,
   db_path: argv.db || null,
+  account_keys_path: argv.acctKeys || null,
   logger: logger
 }
 
@@ -133,6 +169,22 @@ server.listen(options.port, options.hostname, function(err, state) {
     console.log("(" + index + ") " + accounts[address].secretKey.toString("hex"));
   });
 
+
+  if (options.account_keys_path != null) {
+    console.log("");
+    console.log("Saving accounts and keys to " + options.account_keys_path);
+    var obj = {}
+    obj.addresses = accounts;
+    obj.private_keys = {};
+    addresses.forEach(function(address, index) {
+       obj.private_keys[address] = accounts[address].secretKey.toString("hex");
+    });
+    var json = JSON.stringify(obj);
+    fs.writeFile(options.account_keys_path, json, 'utf8',function(err){
+      if(err) throw err;
+    })
+  }
+
   if (options.accounts == null) {
     console.log("");
     console.log("HD Wallet");
@@ -169,7 +221,10 @@ server.listen(options.port, options.hostname, function(err, state) {
   console.log("Listening on " + (options.hostname || "localhost") + ":" + options.port);
 });
 
-
+process.on('uncaughtException', function(e) {
+  console.log(e.stack);
+  process.exit(1);
+})
 
 // See http://stackoverflow.com/questions/10021373/what-is-the-windows-equivalent-of-process-onsigint-in-node-js
 if (process.platform === "win32") {
