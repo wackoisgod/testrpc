@@ -1,15 +1,15 @@
 {
   "name": "ethereumjs-testrpc",
-  "version": "5.0.1-wacko",
+  "version": "5.0.2-wacko",
   "bin": {
-    "testrpc": "./cli.js"
+    "testrpc": "./build/cli.node.js"
   },
-  "main": "./lib.js",
+  "main": "./build/lib.node.js",
   "directories": {
     "lib": "./lib"
   },
   "scripts": {
-    "start": "./cli.js",
+    "start": "./build/cli.node.js",
     "test": "mocha",
     "build": "npm run build-cli && npm run build-server && npm run build-provider && npm run build-lib",
     "build-cli": "webpack --config ./webpack/cli.webpack.config.js",
